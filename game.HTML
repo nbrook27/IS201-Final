@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2048 Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #faf8ef;
+            color: #776e65;
+        }
+
+        h1 {
+            margin-top: 20px;
+        }
+
+        #game-container {
+            display: grid;
+            grid-template-columns: repeat(4, 100px);
+            grid-template-rows: repeat(4, 100px);
+            gap: 10px;
+            background-color: #bbada0;
+            padding: 10px;
+            margin: 20px auto;
+            width: 450px;
+            height: 450px;
+            border-radius: 10px;
+        }
+
+        .tile {
+            background-color: #cdc1b4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            border-radius: 5px;
+        }
+
+        .tile[data-value="2"] { background-color: #d1fefc; color: #776e65; }
+        .tile[data-value="4"] { background-color: #bcf5fc; color: #776e65; }
+        .tile[data-value="8"] { background-color: #85ecfc; }
+        .tile[data-value="16"] { background-color: #71f0fc; }
+        .tile[data-value="32"] { background-color: #6bf8fc; }
+        .tile[data-value="64"] { background-color: #f65e3b; }
+        .tile[data-value="128"] { background-color: #edcf72; }
+        .tile[data-value="256"] { background-color: #edcc61; }
+        .tile[data-value="512"] { background-color: #edc850; }
+        .tile[data-value="1024"] { background-color: #edc53f; }
+        .tile[data-value="2048"] { background-color: #edc22e; }
+
+        #score {
+            font-size: 20px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>2048 Game</h1>
+    <div id="game-container">
+        <!-- Tiles will be dynamically added here by JavaScript -->
+    </div>
+    <p id="score">Score: 0</p>
+    <p>Use arrow keys to move the tiles</p>
+    <li class="nav-item"><a class="nav-link" href="../Project Bootstrap/index.html">Home</a></li>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const gameContainer = document.getElementById("game-container");
+            const scoreDisplay = document.getElementById("score");
+            let tiles = Array(16).fill(0); // Represents the grid
+            let score = 0;
+
+            // Create the grid
+            function createGrid() {
+                tiles.forEach((value, index) => {
+                    const tile = document.createElement("div");
+                    tile.classList.add("tile");
+                    if (value !== 0) {
+                        tile.textContent = value;
+                        tile.setAttribute("data-value", value);
+                    }
+                    gameContainer.appendChild(tile);
+                });
+            }
+
+            // Update the grid
+            function updateGrid() {
+                const tileElements = document.querySelectorAll(".tile");
+                tileElements.forEach((tile, index) => {
+                    tile.textContent = tiles[index] === 0 ? "" : tiles[index];
+                    tile.setAttribute("data-value", tiles[index] || 0);
+                });
+                scoreDisplay.textContent = `Score: ${score}`;
+            }
+
+            // Add a new tile
+            function addTile() {
+                let emptyTiles = tiles.map((value, index) => (value === 0 ? index : null)).filter(index => index !== null);
+                if (emptyTiles.length > 0) {
+                    let randomIndex = emptyTiles[Math.floor(Math.random() * emptyTiles.length)];
+                    tiles[randomIndex] = Math.random() > 0.1 ? 2 : 4;
+                    updateGrid();
+                }
+            }
+
+            // Handle keypresses
+            function handleKey(e) {
+                let moved = false;
+                if (e.key === "ArrowLeft") moved = moveLeft();
+                else if (e.key === "ArrowRight") moved = moveRight();
+                else if (e.key === "ArrowUp") moved = moveUp();
+                else if (e.key === "ArrowDown") moved = moveDown();
+                if (moved) {
+                    addTile();
+                    checkGameOver();
+                }
+            }
+
+            // Movement functions
+            function moveLeft() {
+                let moved = false;
+                for (let i = 0; i < 16; i += 4) {
+                    let row = tiles.slice(i, i + 4).filter(val => val);
+                    while (row.length < 4) row.push(0);
+                    for (let j = 0; j < 3; j++) {
+                        if (row[j] === row[j + 1] && row[j] !== 0) {
+                            row[j] *= 2;
+                            score += row[j];
+                            row.splice(j + 1, 1);
+                            row.push(0);
+                        }
+                    }
+                    tiles.splice(i, 4, ...row);
+                    moved = true;
+                }
+                updateGrid();
+                return moved;
+            }
+
+            function moveRight() {
+                let moved = false;
+                for (let i = 0; i < 16; i += 4) {
+                    let row = tiles.slice(i, i + 4).filter(val => val);
+                    while (row.length < 4) row.unshift(0);
+                    for (let j = 3; j > 0; j--) {
+                        if (row[j] === row[j - 1] && row[j] !== 0) {
+                            row[j] *= 2;
+                            score += row[j];
+                            row.splice(j - 1, 1);
+                            row.unshift(0);
+                        }
+                    }
+                    tiles.splice(i, 4, ...row);
+                    moved = true;
+                }
+                updateGrid();
+                return moved;
+            }
+
+            function moveUp() {
+                let moved = false;
+                for (let i = 0; i < 4; i++) {
+                    let column = [];
+                    for (let j = i; j < 16; j += 4) column.push(tiles[j]);
+                    column = column.filter(val => val);
+                    while (column.length < 4) column.push(0);
+                    for (let j = 0; j < 3; j++) {
+                        if (column[j] === column[j + 1] && column[j] !== 0) {
+                            column[j] *= 2;
+                            score += column[j];
+                            column.splice(j + 1, 1);
+                            column.push(0);
+                        }
+                    }
+                    for (let j = i, k = 0; j < 16; j += 4, k++) tiles[j] = column[k];
+                    moved = true;
+                }
+                updateGrid();
+                return moved;
+            }
+
+            function moveDown() {
+                let moved = false;
+                for (let i = 0; i < 4; i++) {
+                    let column = [];
+                    for (let j = i; j < 16; j += 4) column.push(tiles[j]);
+                    column = column.filter(val => val);
+                    while (column.length < 4) column.unshift(0);
+                    for (let j = 3; j > 0; j--) {
+                        if (column[j] === column[j - 1] && column[j] !== 0) {
+                            column[j] *= 2;
+                            score += column[j];
+                            column.splice(j - 1, 1);
+                            column.unshift(0);
+                        }
+                    }
+                    for (let j = i, k = 0; j < 16; j += 4, k++) tiles[j] = column[k];
+                    moved = true;
+                }
+                updateGrid();
+                return moved;
+            }
+
+            // Check for game over
+            function checkGameOver() {
+                if (!tiles.includes(0)) {
+                    alert("Game Over! Your score is " + score);
+                }
+            }
+
+            // Initialize game
+            createGrid();
+            addTile();
+            addTile();
+            document.addEventListener("keydown", handleKey);
+        });
+    </script>
+</body>
+</html>
+
+

@@ -1,0 +1,16 @@
+.left {
+    top: 114px;
+    left: 5px;
+    bottom: 39px;
+    width: 800px;
+    z-index: 1;
+    padding-top: 5px;
+    padding-left: 5px;
+}
+
+.right {
+    top: 114px;
+    left: 200px;
+    bottom: 39px;
+}
+
